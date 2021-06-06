@@ -45,31 +45,13 @@ class NewPatient(object):
             self.conn.commit()
         finally:
             cursor.close()
-    
-    """
-    def id_receive(self,name):
-        cursor = self.conn.cursor()
-        try:
-            switch_sql = "use information"
-            cursor.execute(switch_sql)
-            query_sql = "select * from patient_information where name = '%s'" % (name)
-            cursor.execute(query_sql)
-            results = cursor.fetchone()
-            if results is None:
-                raise Exception("获取病人id失败") 
-            else:
-                self.conn.commit()
-                return results[0]
-        finally:
-            cursor.close()
-    """
-    
+    #这个函数用于创建病人体征信息数据库，数据库的名称需要从DataQuery类中获得
     def database_create(self,title):
         cursor = self.conn.cursor()
         try:
             sql = "create database %s" % title
             cursor.execute(sql)
-            print("病人的体征数据库编号为：",title)
+            print("病人的体征数据库名字为：",title)
             rs = cursor.rowcount
             if rs != 1:
                 raise Exception("病人体征数据建库失败")
@@ -234,7 +216,7 @@ class PatientDischarge(object):
             results = cursor.fetchone()
             self.conn.commit()
             if results != None:
-                raise Exception("删除病人数据库失败")
+                raise Exception("病人数据库删除失败")
             else:
                 return True
         finally:
@@ -248,15 +230,18 @@ class PatientDischarge(object):
             cursor.execute(delete_sql)
             rs = cursor.rowcount
             if rs != 1:
-                raise Exception("病人信息删除失败")
+                raise Exception("病人信息行删除失败")
                 self.conn.rollback()
             self.conn.commit()
         finally:
             cursor.close()
     #这个函数用于删除病人的所有信息
     def information_delete(self,patient_id,database_name):
-        PatientDischarge.line_delete(patient_id)
-        PatientDischarge.database_drop(database_name)
+        if PatientDischarge.discharge_judge():
+            PatientDischarge.line_delete(patient_id)
+            PatientDischarge.database_drop(database_name)
+        else:
+            print("不允许擅自删除病人信息")
     #这个函数还没有完成，需要与前端进行对接：用于输出祝福语句
     def say_goodbye(self):
         print("祝您身体健康！")
