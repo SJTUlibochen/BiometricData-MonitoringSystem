@@ -16,10 +16,10 @@ if __name__ == "__main__":
         login_sql = 'use information'
         #cursor.execute(switch_sql)
         cursor.execute(login_sql)
-        #query_sql = "select * from patient_information where name = '徐阶'"
+        query_sql = "select * from patient_information where name = '严嵩'"
         #query_sql = "select * from patient_information where name = '李博辰'"
-        #cursor.execute(query_sql)
-        """
+        cursor.execute(query_sql)
+        
         results = cursor.fetchone()
         if results is not None:
             inforlist = ['id','name','gender','age','disease','hospitalized_date','doctor_name','doctor_id','ward_id']
@@ -27,21 +27,25 @@ if __name__ == "__main__":
             i = 1
             for i in range(len(inforlist)):
                 infordict.update({inforlist[i]:results[i]})
-            print(infordict,'\n')            
+            print(infordict,'\n') 
+            id_number = infordict['id']
+            print(id_number,'\n')
+            print(type(id_number))
         else:
             print('1')
         """
         title = 'name'
-        query_key = '徐阶'
+        query_key = '严嵩'
         if title == 'name':
             print(query_key,'\n')
-            query_key = '\"%s\"' % (query_key)
+            query_key = '\'%s\'' % (query_key)
             print(query_key)
         query_sql = "select * from patient_information where %s = %s" % (title,query_key)
         print(query_sql,'\n')
         cursor.execute(query_sql)
         results = cursor.fetchone()
         print(results)
+        """
         #create_sql = "create table if not exists bio20001004(id INT NOT NULL AUTO_INCREMENT PRIMARY KEY)"
         #cursor.execute(create_sql)
         #show_sql = "show tables"

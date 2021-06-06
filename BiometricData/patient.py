@@ -154,17 +154,17 @@ class DataQuery(object):
     def query(self,title,query_key):
         cursor = self.conn.cursor()
         if title == 'name':
-            query_key = '\"%s\"' % (query_key)
+            query_key = '\'%s\'' % (query_key)
         try:
             cursor.execute("use information")
-            query_sql = "select * from table patient_information where %s = %s" % (title,query_key)
+            query_sql = "select * from patient_information where %s = %s" % (title,query_key)
             cursor.execute(query_sql)
             results = cursor.fetchone()
             if results is None:
                 raise Exception("数据库中不存在该患者，请检查输入信息的准确性或患者是否已经出院")
             else:
                 self.conn.commit()
-                inforlist = {'id','name','gender','age','disease','hospitalized_date','doctor_name','doctor_id','ward_id'}
+                inforlist = ('id','name','gender','age','disease','hospitalized_date','doctor_name','doctor_id','ward_id')
                 infordict = {}
                 if len(inforlist) == len(results):
                     for i in range(len(inforlist)):
@@ -175,15 +175,15 @@ class DataQuery(object):
         finally:
             cursor.close()
     #这个函数用于将病人的id转化为病人数据库名称并返回
-    def id_convert(self,patient_id):
-        patient_id = str(patient_id)
-        if len(patient_id) == 1:
-            id_str = '00'+patient_id
-        elif len(patient_id) == 2:
-            id_str = '0'+patient_id
+    def id_convert(self,id_number):
+        id_string = str(id_number)
+        if len(id_string) == 1:
+            name_str = '00'+id_string
+        elif len(id_string) == 2:
+            name_str = '0'+id_string
         else:
-            id_str = patient_id
-        database_name = "patient"+id_str
+            name_str = id_string
+        database_name = "patient"+name_str
         return database_name
 
 class DataDisplay(object):
@@ -249,45 +249,46 @@ class PatientDischarge(object):
 if __name__ == "__main__":
     conn = pymysql.connect(host = "localhost",user = "root",password = "SJTUlbc2000101",charset = "utf8")
     newpatient = NewPatient(conn)
-    save_data = DataGeneration(conn)
+    datasave = DataGeneration(conn)
+    dataquery = DataQuery(conn)
+    goodbye = PatientDischarge(conn)
+    #这个函数专门用来随机生成病人信息以进行测试
+    def random_name():
+        threedynasties = []
+        with open('人名.txt') as f:
+            f.seek(0)
+            for names in f.readlines():
+                names = names.replace(",","").replace("\n","")
+                threedynasties.append(names)
+        return threedynasties[random.randint(0,len(threedynasties))]
     
-    patient_name = "王尼玛"
-    patient_age = 35
-    patient_gender = "m"
-    patient_disease = "抑郁症"
-    patient_doctor = {'name':'李博辰','id':'518021911080'}
-    patient_ward = 426
-    
-    def insertdata(name,gender,age,disease,doctor_name,doctor_id,ward_id):
-        newpatient.infor_insert(name,gender,age,disease,doctor_name,doctor_id,ward_id)
-        
-    def receive_id(name):
-        return newpatient.id_receive(name)
-    
-    def createdatabase(id_number):
-        if len(str(id_number)) == 1:
-            id_str = '00'+str(id_number)
-        elif len(str(id_number)) == 2:
-            id_str = '0'+str(id_number)
+    def random_gender():
+        gender = random.random()
+        if gender < 0.5:
+            return 'm'
         else:
-            id_str = str(id_number)
-        patient_id = "patient"+id_str
-        newpatient.database_create(patient_id)
-        #返回的patient_id为“patient+number”形式
-        return patient_id
+            return 'f'
     
-    def createtable(database_name):
-        table_name = save_data.table_create(database_name)
-        return table_name
-    
-    def savedata(database_name,table_name):
-        save_data.save(database_name,table_name)
+    patient_name = "%s" % random_name()
+    patient_age = random.randint(1,99)
+    patient_gender = random_gender()
+    patient_disease = "摸鱼症"
+    patient_doctor = {'name':'李博辰','id':'518021911080'}
+    patient_ward = random.randint(400,500)
     
     try:
-        insertdata(patient_name,patient_gender,patient_age,patient_disease,patient_doctor['name'],patient_doctor['id'],patient_ward)
-        database_name = createdatabase(receive_id(patient_name))
-        table_name = createtable(database_name)
-        schedule.every(5).seconds.do(savedata,database_name,table_name)
+        #向patient_information中插入病人信息行
+        newpatient.infor_insert(patient_name,patient_gender,patient_age,patient_disease,patient_doctor['name'],patient_doctor['id'],patient_ward)
+        #查询数据库名称
+        infor_dict = dataquery.query('name',patient_name)
+        id_number = infor_dict['id']
+        database_name = dataquery.id_convert(id_number)
+        #创建病人体征数据库
+        newpatient.database_create(database_name)
+        #创建table并获得table名称
+        table_name = datasave.table_create(database_name)
+        #每5s存储一次数据
+        schedule.every(5).seconds.do(datasave.save,database_name,table_name)
     except Exception as e:
         print('出错了：%s'% e)
     
