@@ -4,7 +4,7 @@ save_data_on_exit = True
 save_history = True
 save_non_project_files = False
 project_type = empty-project-type
-recent_files = ['matplot_test.py', 'doctor.py', 'patient.py', 'pyqt_test.py', 'mysql_test.py']
+recent_files = ['data_display.py', 'pyqt.py', 'test\\mysql_test.py']
 
 [main]
 version = 0.2.0
